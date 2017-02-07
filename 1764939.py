@@ -20,7 +20,7 @@ lib.remove_nan(whole_set, threshold=0.4)
 # Since Kaggle evaluates submissions using the logarithm of the predicted value
 # makes sense to train the model with the logarithm of the prices
 
-train["SalePrice"] = np.log(train["SalePrice"])
+train["SalePrice"] = np.log1p(train["SalePrice"])
 
 # Some features in the dataset are converted to numerical version
 
