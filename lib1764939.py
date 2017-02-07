@@ -40,9 +40,32 @@ def select_skewed_features(series, skew_thresh=0.75):
 
 
 # =======================================================================================================
+#   This function performs a cross validation to evaluate our prediction model
+# =======================================================================================================
+def cv(X, y, test_range=100):
+    scores = []
+    for alpha in np.arange(0, test_range):
+        ridge_cv = Ridge(alpha).fit(X, y)
+        scores.append(cross_validation.cross_val_score(ridge_cv, X, y, cv=10, scoring='mean_squared_error').mean())
+    opt_alpha = np.argmax(scores)+1
+    return opt_alpha, scores
+
+
+# def remove_outliers(df):
+#     # computing percentile
+#     low = .05
+#     high = .95
+#     quant_df = df.quantile([low, high])
+#     # filtering dataset
+#     filt_df = df.apply(lambda x: x[(x > quant_df.loc[low, x.name]) & (x < quant_df.loc[high, x.name])], axis=0)
+#     print(filt_df.head())
+
+# =======================================================================================================
 #   Like its name suggests this utility function convert categorical feature into a numerical version.
 #   Requires a target dataframe, the feature that has to be converted and a list of possible values that
-#   the feature can take. Return a new dataframe with requested variable converted
+#   the feature can take. Return a new dataframe with requested variable converted.
+#
+#   IT'S NOT ACTUALLY IN USE BECAUSE IT DOES NOT IMPROVE THE KAGGLE SCORE
 # =======================================================================================================
 def convert_feature_cat_to_num(dataframe, feature, value_list):
     for index, row in dataframe.iterrows():
@@ -74,12 +97,3 @@ def bulk_convert_cat_to_num(dataframe):
     dataframe = convert_feature_cat_to_num(dataframe, "GarageCond", ["Po", "Fa", "TA", "Gd", "Ex"])
     dataframe = convert_feature_cat_to_num(dataframe, "PavedDrive", ["N", "P", "Y"])
     return dataframe
-
-
-def cv(X, y, test_range=100):
-    preds = []
-    for alpha in np.arange(0, test_range):
-        ridge_cv = Ridge(alpha).fit(X, y)
-        preds.append(cross_validation.cross_val_score(ridge_cv, X, y, cv=10).mean())
-    opt_alpha = np.argmax(preds)+1
-    return opt_alpha
