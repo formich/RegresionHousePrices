@@ -53,7 +53,15 @@ y = train.SalePrice
 X_test = whole_set[train.shape[0]:]
 
 # Compute optimum alpha for Ridge regression with cross validation
-opt_alpha, scores = lib.cv(X, y, test_range=100)
+test_range = np.arange(1, 10+0.1, 0.1)
+(opt_alpha, min_rmse), rmse_list = lib.cv(X, y, test_range=test_range)
+print("OPT --", opt_alpha, min_rmse)
+
+cv_ridge = pd.Series(rmse_list, index=test_range)
+
+#plot the cross validation
+lib.pplot(cv_ridge, min_rmse, opt_alpha)
+
 
 ridge = Ridge(alpha=opt_alpha, fit_intercept=True)
 ridge.fit(X, y)

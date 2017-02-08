@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import skew
-from sklearn.linear_model import Ridge, RidgeCV
-from sklearn import cross_validation
+from sklearn.linear_model import Ridge
+from sklearn.cross_validation import cross_val_score
+from matplotlib import pyplot as plt
 
 
 
@@ -42,23 +43,21 @@ def select_skewed_features(series, skew_thresh=0.75):
 # =======================================================================================================
 #   This function performs a cross validation to evaluate our prediction model
 # =======================================================================================================
-def cv(X, y, test_range=100):
-    scores = []
-    for alpha in np.arange(0, test_range):
-        ridge_cv = Ridge(alpha).fit(X, y)
-        scores.append(cross_validation.cross_val_score(ridge_cv, X, y, cv=10, scoring='mean_squared_error').mean())
-    opt_alpha = np.argmax(scores)+1
-    return opt_alpha, scores
+def cv(X, y, test_range=np.arange(1, 10+0.1, 0.1)):
+    rmse = []
+    min_rse_opt_alpha = (np.inf, 0)
+    for alpha in test_range:
+        current_rmse = rmse_cv(Ridge(alpha=alpha), X, y).mean()
+        rmse.append(current_rmse)
+        if current_rmse < min_rse_opt_alpha[0]:
+            min_rse_opt_alpha = (current_rmse, alpha)
+        print(min_rse_opt_alpha, "current alpha:", alpha)
+    return min_rse_opt_alpha, rmse
 
 
-# def remove_outliers(df):
-#     # computing percentile
-#     low = .05
-#     high = .95
-#     quant_df = df.quantile([low, high])
-#     # filtering dataset
-#     filt_df = df.apply(lambda x: x[(x > quant_df.loc[low, x.name]) & (x < quant_df.loc[high, x.name])], axis=0)
-#     print(filt_df.head())
+def rmse_cv(model, X, y):
+    return np.sqrt(-cross_val_score(model, X, y, cv=50, scoring='mean_squared_error'))
+
 
 # =======================================================================================================
 #   Like its name suggests this utility function convert categorical feature into a numerical version.
@@ -97,3 +96,38 @@ def bulk_convert_cat_to_num(dataframe):
     dataframe = convert_feature_cat_to_num(dataframe, "GarageCond", ["Po", "Fa", "TA", "Gd", "Ex"])
     dataframe = convert_feature_cat_to_num(dataframe, "PavedDrive", ["N", "P", "Y"])
     return dataframe
+
+
+# =======================================================================================================
+#   Function used to plot the RMSE with respect of alpha of the Ridge model
+# =======================================================================================================
+def pplot(data, dotx, doty):
+    fig, ax = plt.subplots()
+    ax.plot(data)
+    ax.plot(dotx, doty, 'ro')
+    ax.annotate("min RMSE="+str(np.round(doty, decimals=4)), xy=(dotx, doty), xytext=(-20, 20),
+                textcoords='offset points', ha='left', va='bottom',
+                bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.6),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+    ax.grid(True)
+    plt.title('Cross Validation Ridge Model')
+    plt.xlabel("alpha")
+    plt.ylabel("RMSE")
+    plt.xlim([0, 10])
+    plt.ylim([0.1204, 0.1217])
+
+    ticklines = ax.get_xticklines() + ax.get_yticklines()
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    ticklabels = ax.get_xticklabels() + ax.get_yticklabels()
+
+    for line in ticklines:
+        line.set_linewidth(3)
+
+    for line in gridlines:
+        line.set_linestyle('-.')
+
+    for label in ticklabels:
+        label.set_color('k')
+        label.set_fontsize('medium')
+
+    plt.show()
