@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import skew
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lasso
 from sklearn.cross_validation import cross_val_score
 from matplotlib import pyplot as plt
-
 
 
 # =======================================================================================================
@@ -17,7 +16,38 @@ def remove_nan(dataframe, threshold=1/2):
 
 
 # =======================================================================================================
-#   function compute_skewness take a pandas' dataframe and computes skewness for each columns,
+#   Two function to detect and remove dataset entries that are identified as outliers,
+#   it can be tuned with a threshold parameter. detect_outliers take in input a dataframe
+#   and a threshold and return two list, each containing the outliers of trainset and testset
+# =======================================================================================================
+def detect_outliers(df, std_thresh=5):
+    index_train = set()
+    index_test = set()
+    for feature in df.columns:
+        mean = np.mean(df[feature].values)
+        std = np.std(df[feature].values)
+        for index, value in df[feature].iteritems():
+            if np.abs((value - mean)/std) > std_thresh:
+                if index <= 1460:
+                    index_train.add(index)
+                else:
+                    index_test.add(index)
+    return list(index_train), list(index_test)
+
+
+# =======================================================================================================
+#   Very simple function that take in input a pandas' dataframe and a list of outliers
+#   return the dataframe with rows corresponding to the outliers ID dropped
+# =======================================================================================================
+def remove_outliers(df, outlier_list):
+    tuned_list = []
+    for x in outlier_list:
+        tuned_list.append(x-1)
+    return df.drop(df.index[tuned_list], axis=0)
+
+
+# =======================================================================================================
+#   function compute_skewness take a pandas' dataframe and computes the skewness for each columns,
 #   return a pandas' Series containing the skewness indexed with columns names.
 # =======================================================================================================
 def compute_skewness(dataframe):
@@ -29,8 +59,8 @@ def compute_skewness(dataframe):
 
 
 # =======================================================================================================
-#   function select_skewed_features take a pandas' dataframe and computes skewness for each columns,
-#   return a pandas' Series containing the skewness indexed with columns names.
+#   Utility function to use paired with compute_skewness, select the skewed features according to
+#   threshold(skew_thresh) specified
 # =======================================================================================================
 def select_skewed_features(series, skew_thresh=0.75):
     skewed = []
@@ -41,22 +71,25 @@ def select_skewed_features(series, skew_thresh=0.75):
 
 
 # =======================================================================================================
-#   This function performs a cross validation to evaluate our prediction model
+#   This function search the optimum alpha for the lasso regression,
+#   at any step try with a different alpha and compute a cross validation on the dataset.
+#   Is taken the alpha with max cross validation score associated.
+#   The function take a train set X, a test vector y (with the sale prices) and as an optional parameter
+#   an array containing alphas to try.
 # =======================================================================================================
-def cv(X, y, test_range=np.arange(1, 10+0.1, 0.1)):
-    rmse = []
-    min_rse_opt_alpha = (np.inf, 0)
+
+def opt_alpha_cv(X, y, test_range=np.arange(0.0001, 0.0005, 0.00001)):
+    r2_arr = []
+    alpha_arr = []
     for alpha in test_range:
-        current_rmse = rmse_cv(Ridge(alpha=alpha), X, y).mean()
-        rmse.append(current_rmse)
-        if current_rmse < min_rse_opt_alpha[0]:
-            min_rse_opt_alpha = (current_rmse, alpha)
-        print(min_rse_opt_alpha, "current alpha:", alpha)
-    return min_rse_opt_alpha, rmse
-
-
-def rmse_cv(model, X, y):
-    return np.sqrt(-cross_val_score(model, X, y, cv=50, scoring='mean_squared_error'))
+        ridge_model = Lasso(alpha).fit(X, y)
+        current_r2 = cross_val_score(ridge_model, X, y).mean()
+        r2_arr.append(current_r2)
+        alpha_arr.append(alpha)
+    opt_alpha_idx = np.argmax(r2_arr)
+    opt_alpha = alpha_arr[opt_alpha_idx]
+    r2_min = r2_arr[opt_alpha_idx]
+    return alpha_arr, r2_arr, opt_alpha, r2_min
 
 
 # =======================================================================================================
@@ -64,7 +97,7 @@ def rmse_cv(model, X, y):
 #   Requires a target dataframe, the feature that has to be converted and a list of possible values that
 #   the feature can take. Return a new dataframe with requested variable converted.
 #
-#   IT'S NOT ACTUALLY IN USE BECAUSE IT DOES NOT IMPROVE THE KAGGLE SCORE
+#   IT'S NOT ACTUALLY USED BECAUSE IT SEEMS TO RUIN THE PREDICTION (KAGGLE SCORE DECREASE)
 # =======================================================================================================
 def convert_feature_cat_to_num(dataframe, feature, value_list):
     for index, row in dataframe.iterrows():
@@ -99,22 +132,23 @@ def bulk_convert_cat_to_num(dataframe):
 
 
 # =======================================================================================================
-#   Function used to plot the RMSE with respect of alpha of the Ridge model
+#   Function used to plot the R^2 with respect of alpha of the Lasso model
 # =======================================================================================================
 def pplot(data, dotx, doty):
+    plt.rcParams['figure.figsize'] = (12.0, 6.0)
     fig, ax = plt.subplots()
     ax.plot(data)
     ax.plot(dotx, doty, 'ro')
-    ax.annotate("min RMSE="+str(np.round(doty, decimals=4)), xy=(dotx, doty), xytext=(-20, 20),
+    ax.annotate(r'$max(R^2)='+str(np.round(doty, decimals=4))+'$', xy=(dotx, doty), xytext=(-20, 20),
                 textcoords='offset points', ha='left', va='bottom',
                 bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.6),
                 arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
     ax.grid(True)
-    plt.title('Cross Validation Ridge Model')
-    plt.xlabel("alpha")
-    plt.ylabel("RMSE")
-    plt.xlim([0, 10])
-    plt.ylim([0.1204, 0.1217])
+    plt.title('Cross Validation Lasso Model')
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel(r'$R^2$')
+    plt.xlim([0.0001, 0.0025])
+    plt.ylim([0.910, 0.927])
 
     ticklines = ax.get_xticklines() + ax.get_yticklines()
     gridlines = ax.get_xgridlines() + ax.get_ygridlines()
@@ -131,3 +165,5 @@ def pplot(data, dotx, doty):
         label.set_fontsize('medium')
 
     plt.show()
+
+
