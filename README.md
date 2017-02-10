@@ -12,4 +12,4 @@ python3 main.py "data/train.csv" "data/test.csv"
 ```
 The prediction will write on file pred.csv into data folder.
 
-#### Check _HousePrices.ipynb_ to watch workflow of the script, enjoy!
+### Check _HousePrices.ipynb_ to watch workflow of the script, enjoy!
