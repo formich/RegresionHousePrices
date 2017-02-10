@@ -1,4 +1,4 @@
-# PythonRegresionHousePrices-FDS-Final
+# RegresionHousePrices
 [House Prices: Advanced Regression Techniques](https://www.kaggle.com/c/house-prices-advanced-regression-techniques)
 
 In this challenge we are being asked to produce a prediction about sale prices of residential homes in Ames,
