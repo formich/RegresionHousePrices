@@ -132,7 +132,7 @@ def bulk_convert_cat_to_num(dataframe):
 
 
 # =======================================================================================================
-#   Function used to plot the R^2 with respect of alpha of the Lasso model
+#   Function used to plot the R^2 with respect of alpha of the Lasso model and Ridge model
 # =======================================================================================================
 def pplot(data, dotx, doty):
     plt.rcParams['figure.figsize'] = (12.0, 6.0)
@@ -165,5 +165,3 @@ def pplot(data, dotx, doty):
         label.set_fontsize('medium')
 
     plt.show()
-
-

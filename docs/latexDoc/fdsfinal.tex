@@ -2,6 +2,7 @@
 \usepackage[a4paper,bindingoffset=0.2in,%
             left=0.3in,right=0.4in,top=1in,bottom=1in,%
             footskip=.25in]{geometry}
+\usepackage{graphicx}
 %	options include 12pt or 11pt or 10pt
 %	classes include article, report, book, letter, thesis
 
@@ -16,18 +17,42 @@
 In this challenge we are being asked to produce a prediction about sale prices of residential homes in Ames, Iowa. Train set and  test set needed for the prediction is provided as two separated CSV file, we want to produce another CSV file containing for each row the Id of the house and a prediction for the sale price. Follow the procedure adopted.
 
 \section{Preprocessing}
-We wipe the dataset as much as possibile in order to make our predictions more accurate.
+In this part I tried to wipe the dataset as much as possibile in order to make our predictions more accurate.
 \paragraph{Make trainset bigger}
-In order to get better accuracy on the final prediction, I cut out the price column
-from the trainset and merge the two datasets together this result in a larger dataset and
-hopefully better estimations.
-\paragraph{Dropping features with too many NaN}
-I drop all features that have more than 40\%(empirically chosen) of NaN among its entries. This features are too much uninformative and it would ruin the prediction.
+Cutting off price column from the trainset and merge the two datasets together result in a larger dataset and hopefully in a better estimation.
+\paragraph{Drop features with too many missing values}
+I drop all features that have more than 40\%(empirically chosen) of missing values(NA) among its entries. This features are too much uninformative and it would ruin the regression.
 \paragraph{Remove outliers} 
 In this phase I remove from the trainset all entries identified as outliers, in particular all those with a value that exceed the standard deviation more than 5 times. That's because linear model regression are quite sensible to the outliers. 
-\paragraph{Compute the skewness and take the log}
-I detect the features that has an high skewness and i transform by taking $log(feature + 1)$ in some sense it make the feature more "Normal"
+\paragraph{Compute the skewness and take the Log}
+I detect the features that has an high skewness and I transform it taking $log(feature + 1)$ in some sense it make the feature more "Normal".
 \paragraph{Generate dummy variable}
-A lot of features among the 79 that compose the dataset are categorical, which is it take value from a finite list of string representing some quality, we need to convert it to something that can be inserted in our model. Generate boolean variable for each possible value is a way and in this case work well.
-\paragraph{Filling NaN with the mean}
+A lot of features among the 79 that compose the dataset are categorical, which is it take value from a finite list of string representing some quality, we need to convert it to something that can be inserted in our model. Generate a boolean variable for each possible value is a way, in this case work well.
+\paragraph{Substitute missing values with the mean}
+Here I sobstitute all the remaining missing values with the mean of the respective feature, this actually allows to compute regression also with point that include some NaN and at the sme time avoids to introduce distorsions. 
+
+\section{Model Selection}
+In this part I evaluate which model to use in order to computea regression. Essentialy I tried three different linear models: Linear Regression, Ridge Regression and Lasso regression. For each model attempts have been made to modify a bit the parameters defined into Preprocessing part to "adapt", as far as possibile, the dataset to  the model in use. 
+\paragraph{Cross Validation}
+In the train phase i use the cross validation tecnique to evaluate the model in use and to find when needed the optimum parameter for them ($\alpha$ for Ridge and Lasso). In the next page there will be some explanatory images.
+
+\begin{figure}[h]
+\caption{Plot of $R^2$ with respect of $\alpha$ obtained into cross validation of Ridge model}
+\includegraphics[width=21cm]{R2ridge.png}
+\centering
+\end{figure}
+
+\begin{figure}[h]
+\caption{Plot of $R^2$ with respect of $\alpha$ obtained into cross validation of Lasso model}
+\includegraphics[width=21cm]{R2lasso.png}
+\centering
+\end{figure}
+
+\begin{figure}[t]
+\caption{Plot of residuals obtained from Lasso regression}
+\includegraphics[width=8cm]{residuals.png}
+\centering
+\end{figure}
+
 \end{document}
+
