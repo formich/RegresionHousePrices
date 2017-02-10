@@ -49,7 +49,7 @@ y = train.SalePrice
 # This block commented right down here generates the plot of the score function what's in the PDF
 # now is commented because is not requested to delivery and slow down a bit the execution
 #
-# # Generate arrays to plot R^2 with respect of alpha
+# Generate arrays to plot R^2 with respect of alpha
 # test_range = np.arange(0.0001, 0.003, 0.00001)
 # alpha_arr, r2_arr, opt_alpha, r2max = lib.opt_alpha_cv(X, y, test_range=test_range)
 # cv_lasso = pd.Series(r2_arr, index=alpha_arr)
