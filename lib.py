@@ -78,7 +78,7 @@ def select_skewed_features(series, skew_thresh=0.75):
 #   an array containing alphas to try.
 # =======================================================================================================
 
-def opt_alpha_cv(X, y, test_range=np.arange(0.0001, 0.0005, 0.00001)):
+def opt_alpha_cv(X, y, test_range=np.arange(0.0002, 0.0005, 0.00001)):
     r2_arr = []
     alpha_arr = []
     for alpha in test_range:
@@ -136,8 +136,9 @@ def bulk_convert_cat_to_num(dataframe):
 # =======================================================================================================
 def pplot(data, dotx, doty):
     plt.rcParams['figure.figsize'] = (12.0, 6.0)
+    plt.rcParams.update({'font.size': 16})
     fig, ax = plt.subplots()
-    ax.plot(data)
+    ax.plot(data, linewidth=3, c="c")
     ax.plot(dotx, doty, 'ro')
     ax.annotate(r'$max(R^2)='+str(np.round(doty, decimals=4))+'$', xy=(dotx, doty), xytext=(-20, 20),
                 textcoords='offset points', ha='left', va='bottom',

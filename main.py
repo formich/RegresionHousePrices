@@ -1,10 +1,8 @@
-import lib1764939 as lib
+import lib as lib
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import Lasso
 from matplotlib import pyplot as plt
-
-
 
 # Importing csv datasets into pandas' DataFrame
 train = pd.read_csv("data/train.csv", index_col=0)
@@ -50,10 +48,10 @@ y = train.SalePrice
 
 # This block commented right down here generates the plot of the score function what's in the PDF
 # now is commented because is not requested to delivery and slow down a bit the execution
-
-# Generate arrays to plot R^2 with respect of alpha
+#
+# # Generate arrays to plot R^2 with respect of alpha
 # test_range = np.arange(0.0001, 0.003, 0.00001)
-# alpha_arr, r2_arr, opt_alpha, r2max=lib.cv(X, y, test_range=test_range)
+# alpha_arr, r2_arr, opt_alpha, r2max = lib.opt_alpha_cv(X, y, test_range=test_range)
 # cv_lasso = pd.Series(r2_arr, index=alpha_arr)
 # # plot the cross validation
 # lib.pplot(cv_lasso, opt_alpha, r2max)
@@ -67,4 +65,4 @@ lasso.fit(X, y)
 
 # Finally compute the prediction!
 pred = pd.DataFrame({"SalePrice": np.exp(lasso.predict(X_test))}, index=test.index)
-pred.to_csv("pred.csv")
+pred.to_csv("data/pred.csv")
